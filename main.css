@@ -1,0 +1,139 @@
+body {
+	margin: 0px;
+	padding: 0px;
+	background-color: lightgrey;
+	max-width:100%;
+	font-family: arial;
+}
+
+header {
+	background-color: green;
+	margin:0;
+	padding: 4px;
+}
+
+section {
+	background-color: lightgrey;
+	margin:0;
+	padding: 4px;
+}
+
+footer {
+	background-color: lightgrey;
+	margin:0;
+	padding: 4px;
+}
+
+h1 {
+	font-family: arial;
+}
+
+h2 {
+	font-family: arial;
+}
+
+h3 {
+	font-family: arial;
+}
+
+h6 {
+	font-family: arial;
+	font-size: 6px;
+}
+
+p {
+	font-family: arial;
+}
+
+label {
+	font-family: arial;
+	margin: 10px 100px;
+}
+
+img {
+	max-width: 500px;
+	max-height: 350px;
+}
+
+textarea {
+	font-family: arial;
+	width: 25%;
+	background-color: lightgrey;
+	columns: 100;
+	resize: none;
+	margin:5px;
+}
+
+table { 
+	width: 210mm;
+	background-color: white;
+	table-layout: fixed;
+}
+
+td {
+	font-family: arial;
+	padding:10px 30px;
+	outline: solid black;
+	margin: none;
+	width: 105mm;
+	height:85mm;
+}
+
+input[type=file]{
+	margin: 10px 60px;
+	width: 20%;
+	color:transparent;
+	font-family: arial;
+}
+
+.headingTable {
+	width: 60%;
+	background-color: white;
+	background-color: lightgrey;
+}
+
+.headingTD {
+	font-family: arial;
+	padding:10px;
+	outline: none;
+	width:50%;
+	height: 75px;
+}
+
+.testDiv {
+	background-color: red;
+	height: 500px;
+}
+
+.cardBody {
+	margin: 0px;
+	padding: 0px;
+	background-color: lightgrey;
+	max-width:210mm;
+}
+
+.noBorders {
+	font-family: arial;
+	padding:10px 30px;
+	outline: transparent;
+	margin: none;
+	width: 105mm;
+	height:85mm;
+}
+
+.recurring {
+	font-family: arial;
+	border-top: 1px solid black;
+	margin:0;
+	display:inline-block;
+}
+
+.cardBoard {
+	padding: 20px;
+	background-color: white;
+	border-radius: 100px;
+	max-width: 60%;
+	min-height: 70vh;
+	font-family: arial;
+	font-size: 16px;
+}

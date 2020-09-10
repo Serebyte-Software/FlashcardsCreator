@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html id="mainHTML">
+<head>
+	<link id="myCSS" rel="stylesheet" type="text/css" href="main.css"></link>
+	<title>
+		Flashcards Creator
+	</title>
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<script src="jquery-3.5.1.min.js"></script>
+</head>
+<body>
+	<header>
+		<center>
+			<h1 style="cursor: default">
+				Flashcards Creator
+			</h1>
+		</center>
+	</header>
+
+	<section>
+		<center>
+			<h2><a onclick="goToInstructions()" style="cursor:pointer">New To This Program? Click on This Text to See The Instructions Page.</a></h2>
+			
+			<p>
+				Use the buttons and input boxes below to create a set of flashcards, when you're happy with them, click print to format (it will handle styling, centering, etc) and print out the set.
+			</p>
+			<br/>
+			
+			<br/>
+			
+			<hr/>
+			
+			<h2>
+				Settings
+			</h2>
+			
+			<button id="closeWindowButton" onclick="closePopup()">
+				Close Card Popup After Printing: On
+			</button>
+			
+			<br/>
+			
+			<br/>
+			
+			<button id="bordersButton" onclick="displayBorders()">
+				Display Flashcard Borders: On
+			</button>
+			
+			<br/>
+			
+			<br/>
+			
+			<button id="printTitleButton" onclick="printTitle()">
+				Print Page Number, Title and Margin: Off
+			</button>
+			
+			<br/>
+			
+			<br/>
+			
+			<p id="paddingCounter">
+				Card Width Padding (the Amount of Surrounding Whitespace for Each Card in Pixels): 35
+			</p>
+			
+			<input style="width:50vw" id="paddingSetter" oninput="setPadding()" type="range" min=25 max=50 value=35></input>
+			
+			<br/>
+			
+			<br/>
+			
+			<p id="fontSizeCounter">
+				Font Size (in Pixels When Cards Are Printed or Ran): 16
+			</p>
+			
+			<input style="width:50vw" id="fontSizeSetter" oninput="setFontSize()" type="range" min=10 max=30 value=16></input>
+			
+			<br/>
+			
+			<br/>
+			
+			<hr/>
+			
+			<h2>
+				Card Creator
+			</h2>
+			
+			<br/>
+			
+			<div id="cardCreator">
+				<table class="headingTable">
+					<tr>
+						<td class="headingTD">
+							<center>
+								<h2>
+									Front
+								</h2>
+							</center>
+						</td>
+						
+						<td class="headingTD">
+							<center>
+								<h2>
+									Back
+								</h2>
+							<center>
+						</td>
+					</tr>
+				</table>
+			</div>
+			
+			<br/>
+			
+			<button onclick="addCard()">
+				Add Card
+			</button>
+			
+			<button onclick="removeCard()">
+				Remove Card
+			</button>
+			
+			<button onclick="printCards()">
+				Print Cards
+			</button>
+			
+			<button onclick="runCards()">
+				Run Cards
+			</button>
+			
+			<br/>
+			
+			<div id="newSave"></div>
+			
+			<hr/>
+			
+			<h2>
+				Saving
+			</h2>
+			
+			<button onclick="saveToExternalFile()" id="saveExternal">Save to .cardset File</button>
+
+			<br/>
+			
+			<br/>
+			
+			<hr/>
+			
+			<h2 id="loadingText">
+				Loading
+			</h2>
+			
+			<br id="loadingBr1"/>
+			
+			<input type="file" accept=".cardset" id="loadExternal">Load .cardset File</input>
+			
+			<br id="loadingBr2"/>
+			
+			<br id="loadingBr3"/>
+			
+			<hr id="loadingBr4"/>
+			
+			<h2 id="loadingText2">
+				Loading (From Saves Predating Version 1.6)
+			</h2>
+			
+			<br/>
+			
+			<button onclick="load()">
+				Load From Browser Local Storage
+			</button>
+		</center>
+	</section>
+	
+	<footer>
+		<center>
+			<h6>
+				Programmed by Will Punter during July 2020.
+			</h6>
+		</center>
+	</footer>
+	
+	<img id="testimg"/>
+	
+	<div id="textBoxRecord" style="display:none">
+		
+	</div>
+	
+	<script>	
+		//get device 
+		if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+			//tell user about changes
+			alert("Because you are on mobile, you cannot load a .cardset file. You can save to one and transfer it to a laptop/desktop or you can instead save to local storage.");
+		
+			//change buttons 
+			document.getElementById("saveExternal").innerHTML = "Save to .cardset file (for PC use only)";
+			document.getElementById("loadExternal").remove();
+			document.getElementById("loadingText").remove();
+			document.getElementById("loadingBr1").remove();
+			document.getElementById("loadingBr2").remove();
+			document.getElementById("loadingBr3").remove();
+			document.getElementById("loadingBr4").remove();
+			
+			//change text on loading 
+			document.getElementById("loadingText2").innerHTML = "Loading";
+			
+			//create new save 
+			document.getElementById("newSave").innerHTML="<h2>Saving to Browser Local Storage</h2><br/><button onclick=\"save()\">Save</button><hr><br/>";
+		};
+				
+		//get css 
+		var myCSS = document.getElementById("myCSS");
+	
+		//get elements 
+		var cardCreator = document.getElementById("cardCreator"); 
+		var closeWindowButton = document.getElementById("closeWindowButton");
+		var bordersButton = document.getElementById("bordersButton");
+		var printTitleButton = document.getElementById("printTitleButton");
+		
+		//set close popup 
+		var closeWindow = true;
+		
+		//set borders 
+		var borders = true;
+		
+		//set printTitle 
+		var displayTitle = false;
+		
+		//set page size 
+		var pageSize = 1000;
+		
+		//store cards 
+		var cards = [];
+		
+		var images = [];
+		
+		var cardCount = 0;
+			
+		//cell padding 
+		var cellPadding = document.getElementById("paddingSetter").value;
+			
+		//font size 
+		var fontSize = 16;
+		
+		//run cards variables 
+		var runCardIndex = 0;
+		
+		//add card 
+		function addCard(){
+			//create new set of input boxes 
+			cardCount ++;
+			
+			//create input boxes 
+			var textBox1 = document.createElement("textarea");
+			var textBox2 = document.createElement("textarea");
+			var lineBreak = document.createElement("br");
+			var imageUploader1 = document.createElement("input");
+			var imageUploader2 = document.createElement("input");
+			var lineBreak2 = document.createElement("br");
+			var lineBreak3 = document.createElement("br");
+			var info1 = document.createElement("h3");	
+			var info2 = document.createElement("h3");	
+			var buttonLabel1 = document.createElement("label");
+			var buttonLabel2 = document.createElement("label");
+			
+			textBox1.setAttribute("id","input" + cardCount + "A");
+			textBox1.setAttribute("cols","200");
+			textBox1.setAttribute("rows","5");
+			textBox2.setAttribute("id","input" + cardCount + "B");
+			textBox2.setAttribute("cols","200");
+			textBox2.setAttribute("rows","5");
+			lineBreak.setAttribute("id","input" + cardCount + "C");
+			imageUploader1.setAttribute("id","input" + cardCount + "D");
+			imageUploader1.setAttribute("type","file");
+			imageUploader1.setAttribute("accept","image/gif, image/jpeg, image/png");
+			imageUploader1.addEventListener("change", uploadImage, false);
+			imageUploader2.setAttribute("id","input" + cardCount + "E");
+			imageUploader2.setAttribute("type","file");
+			imageUploader2.setAttribute("accept","image/gif, image/jpeg, image/png");
+			imageUploader2.addEventListener("change", uploadImage2, false);
+			lineBreak2.setAttribute("id","input" + cardCount + "F");
+			lineBreak3.setAttribute("id","input" + cardCount + "K");
+			info1.innerHTML = "Card " + cardCount + " Text";
+			info1.setAttribute("id","input" + cardCount + "G");
+			info2.innerHTML = "Card " + cardCount + " Image Paths";
+			info2.setAttribute("id","input" + cardCount + "H");
+			buttonLabel1.innerHTML = "No image selected.";
+			buttonLabel1.setAttribute("id","input" + cardCount + "I");
+			buttonLabel2.innerHTML = "No image selected.";
+			buttonLabel2.setAttribute("id","input" + cardCount + "J");
+			
+			cardCreator.appendChild(info1);
+			cardCreator.appendChild(textBox1);
+			cardCreator.appendChild(textBox2);
+			cardCreator.appendChild(lineBreak);
+			cardCreator.appendChild(info2);
+			cardCreator.appendChild(imageUploader1);
+			cardCreator.appendChild(imageUploader2);
+			cardCreator.appendChild(lineBreak3);
+			cardCreator.appendChild(buttonLabel1);
+			cardCreator.appendChild(buttonLabel2);
+			cardCreator.appendChild(lineBreak2);
+			
+			images.push(["",""]);
+		};
+		
+		//remove card 
+		function removeCard(){
+			//remove set of input boxes 
+			if(cardCount > 0){
+				cardCreator.removeChild(document.getElementById("input" + cardCount + "A"));
+				cardCreator.removeChild(document.getElementById("input" + cardCount + "B"));
+				cardCreator.removeChild(document.getElementById("input" + cardCount + "C"));
+				cardCreator.removeChild(document.getElementById("input" + cardCount + "D"));
+				cardCreator.removeChild(document.getElementById("input" + cardCount + "E"));
+				cardCreator.removeChild(document.getElementById("input" + cardCount + "F"));
+				cardCreator.removeChild(document.getElementById("input" + cardCount + "G"));
+				cardCreator.removeChild(document.getElementById("input" + cardCount + "H"));
+				cardCreator.removeChild(document.getElementById("input" + cardCount + "I"));
+				cardCreator.removeChild(document.getElementById("input" + cardCount + "J"));
+				cardCreator.removeChild(document.getElementById("input" + cardCount + "K"));
+				
+				images.pop();
+				cardCount --;
+			};			
+		};
+		
+		//print cards function 
+		function printCards(){
+			//read cards and create array
+			cards = [];
+			
+			//fill cards array with text
+			for(i = 0; i < cardCount; i++){
+				//add cards to list 
+				cards.push([document.getElementById("input" + (i + 1) + "A").value,document.getElementById("input" + (i + 1) + "B").value]);		
+			};
+			
+			//calculate cards per width of table cell - clientWidth = 466
+			//create table cell
+			var testTableCell = document.createElement("td");
+			testTableCell.innerHTML="###################Loading print##################";
+			document.body.appendChild(testTableCell);
+			var cellWidth = testTableCell.clientWidth - (2 * testTableCell.style.padding);
+			document.body.removeChild(testTableCell);
+			
+			//analyse cards and text - add a space in words that are too long
+			var canDrop = true;
+			for(i in cards){
+				var charCounter = 0;
+				
+				//create temporary string 
+				var temporaryString = cards[i][0];
+				var displacedCharacters = 0;	
+				
+				//sanitise temporaryString
+				//turn existing line breaks into required ones 
+				temporaryString = temporaryString.replace(/<br>/g,"<br\/>");
+			
+				//remove \n from string with global modifier 
+				temporaryString = temporaryString.replace(/\n/g, " ");
+				
+				//remove < from string with global modifier 
+				temporaryString = temporaryString.replace(/</g,"&lt");
+				
+				//remove > from string with global modifier 
+				temporaryString = temporaryString.replace(/>/g,"&gt");
+				
+				//add line breaks back in 
+				temporaryString = temporaryString.replace(/&ltbr\/&gt/g,"<br/>");
+				
+				//add bold back in 
+				temporaryString = temporaryString.replace(/&ltb&gt/g,"<b>");
+				
+				//add bold closing back in 
+				temporaryString = temporaryString.replace(/&lt\/b&gt/g,"</b>");
+				
+				//add sub back in 
+				temporaryString = temporaryString.replace(/&ltsub&gt/g,"<sub>");
+				
+				//add sub closing back in 
+				temporaryString = temporaryString.replace(/&lt\/sub&gt/g,"</sub>");
+				
+				//add sup back in 
+				temporaryString = temporaryString.replace(/&ltsup&gt/g,"<sup>");
+				
+				//add sup closing back in 
+				temporaryString = temporaryString.replace(/&lt\/sup&gt/g,"</sup>");
+				
+				//add in necessary spaces to stop cell overflowing 
+				for(let j=0; j < cards[i][0].length; j ++){
+					charCounter ++;
+					
+					if(temporaryString[j + displacedCharacters] == " "){
+						//reset character counter after encountering space 
+						charCounter = 0;
+					} else if(temporaryString[j + displacedCharacters] == "<"){
+						//check for html opening tag
+						charCounter = 0;
+						canDrop = false;
+					}else if(temporaryString[j + displacedCharacters] == ">"){
+						//check for html closing tag
+						charCounter = 0;
+						canDrop = true;
+					} else if(charCounter > cellWidth / fontSize){
+						//check if can drop down a line 
+						if(canDrop){
+							charCounter = 0;
+							//displacedCharacters ++;
+							temporaryString = temporaryString.substring(0,j + displacedCharacters) + " " + temporaryString.substring(j + displacedCharacters);//cards[i][0].substring(j);
+							
+							//increment displaced characters 
+							displacedCharacters ++;
+						};
+					};
+				};
+				
+				//reset vard inner text 
+				cards[i][0] = temporaryString;
+				
+				//do the same for the back side - reset necessary variables
+				temporaryString = cards[i][1];
+				displacedCharacters = 0;	
+				charCounter = 0;
+				
+				//sanitise temporaryString
+				//turn existing line breaks into required ones 
+				temporaryString = temporaryString.replace(/<br>/g,"<br\/>");
+			
+				//remove \n from string with global modifier 
+				temporaryString = temporaryString.replace(/\n/g, " ");
+				
+				//remove < from string with global modifier 
+				temporaryString = temporaryString.replace(/</g,"&lt");
+				
+				//remove > from string with global modifier 
+				temporaryString = temporaryString.replace(/>/g,"&gt");
+				
+				//add line breaks back in 
+				temporaryString = temporaryString.replace(/&ltbr\/&gt/g,"<br/>");
+				
+				//add bold back in 
+				temporaryString = temporaryString.replace(/&ltb&gt/g,"<b>");
+				
+				//add bold closing back in 
+				temporaryString = temporaryString.replace(/&lt\/b&gt/g,"</b>");
+				
+				//add sub back in 
+				temporaryString = temporaryString.replace(/&ltsub&gt/g,"<sub>");
+				
+				//add sub closing back in 
+				temporaryString = temporaryString.replace(/&lt\/sub&gt/g,"</sub>");
+				
+				//add sup back in 
+				temporaryString = temporaryString.replace(/&ltsup&gt/g,"<sup>");
+				
+				//add sup closing back in 
+				temporaryString = temporaryString.replace(/&lt\/sup&gt/g,"</sup>");
+				
+				//add in necessary spaces to stop cell overflowing 
+				for(let j=0; j < cards[i][1].length; j ++){
+					charCounter ++;
+					
+					if(temporaryString[j + displacedCharacters] == " "){
+						//reset character counter after encountering space 
+						charCounter = 0;
+					} else if(temporaryString[j + displacedCharacters] == "<"){
+						//check for html opening tag
+						charCounter = 0;
+						canDrop = false;
+					}else if(temporaryString[j + displacedCharacters] == ">"){
+						//check for html closing tag
+						charCounter = 0;
+						canDrop = true;
+					} else if(charCounter > cellWidth / fontSize){
+						//check if can drop down a line 
+						if(canDrop){
+							charCounter = 0;
+							//displacedCharacters ++;
+							temporaryString = temporaryString.substring(0,j + displacedCharacters) + " " + temporaryString.substring(j + displacedCharacters);
+							
+							//increment displaced characters 
+							displacedCharacters ++;
+						};
+					};
+				};
+				
+				//reset vard inner text 
+				cards[i][1] = temporaryString;				
+			};
+			
+			//insert images into card array 
+			for(i = 0; i < cardCount; i++){
+				//add image to front, if there is one
+				if(images[i][0] != ""){
+					cards[i][0] += "<br/>" + images[i][0].outerHTML;
+				};
+				
+				//add image to back, if there is one
+				if(images[i][1] != ""){
+					cards[i][1] += "<br/>" + images[i][1].outerHTML;
+				};
+			};
+			
+			//create popup
+			var cardWindow = window.open();
+			
+			//open window document
+			cardWindow.document.open();
+			
+			//write flashcards HTML to document
+			var htmlString = "<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"main.css\"></link><style>td {padding: 10px " + cellPadding + "px;}</style><title>Cardset</title></head><body class=\"cardBody\"><table id=\"cardsTable\">";
+			
+			//create table from cards array
+			for(i in cards){
+				htmlString += "<tr>";
+				htmlString += "<td id=\"cardNumber" + i + "\" style=\"padding: 10px " + cellPadding + "px\"><center><p class=\"cellPara\" style=\"font-size:" + fontSize + "px\">";
+				htmlString += cards[i][0];	
+				htmlString += "</p></center></td>";
+				htmlString += "<td id=\"cardNumber" + i + "B\" style=\"padding: 10px " + cellPadding + "px\"><center><p class=\"cellPara\" style=\"font-size:" + fontSize + "px\">";
+				htmlString += cards[i][1];
+				htmlString += "</p></center></td>";
+				htmlString += "</tr>"
+			};
+			
+			//add ending parts to cardset
+			htmlString += "</table></body></html>";
+		
+			//write to document
+			cardWindow.document.write(htmlString);
+			
+			//close window document
+			cardWindow.document.close();
+			
+			//delay to allow css to adjust
+			setTimeout(function(){
+				//get table height 
+				var pages = (cardWindow.document.getElementById("cardsTable").clientHeight / 1000);
+				
+				//set variables for height calculations
+				var cardHeights = [];
+				var pages = [];
+				var page = [];
+				var pageHeight = 0;
+				var pageCount = 0;
+				
+				//get the heights of all the left cells
+				for(i = 0; i < cardCount; i++){
+					cardHeights.push(cardWindow.document.getElementById("cardNumber" + i).clientHeight);
+				};
+				
+				htmlString = "<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"main.css\"></link>" 
+				
+				if(!displayTitle){
+					htmlString += "<link rel=\"stylesheet\" type=\"text/css\" href=\"pageCSS1.css\"></link>";
+				};
+				
+				htmlString += "<style>td {padding: 10px " + cellPadding + "px; width: 105mm;}</style><title>Print Flashcards</title></head><body class=\"cardBody\"><table>";
+				
+				//decide how many cells per page 
+				for(i in cardHeights){
+					//check if the height is bigger than a page 
+					if(cardHeights[i] > pageSize){
+						cardWindow.close();
+						alert("One of the flashcards you are trying to print is bigger than an A4 page, and therefore will not work. Try shortening the text or using a smaller image.");
+					};
+					
+					if(pageHeight + cardHeights[i] > pageSize){
+						//start new page
+						pageHeight = 0;
+						htmlString += "</table><p style=\"page-break-before: always\"></p><table>";								
+					};
+					
+					//add card to page
+					htmlString += "<tr>";
+					htmlString += "<td id=\"cardNumber" + i + "0\" style=\"padding: 10px " + cellPadding + "px\"";
+					
+					//decide whether or not to show borders 
+					if(borders){
+						htmlString += ">";
+					} else {
+						htmlString += " class=\"noBorders\">"
+					};
+					
+					htmlString += "<center><p class=\"cellPara\" style=\"font-size:" + fontSize + "px\">";
+					htmlString += cards[i][0];
+					htmlString += "</p></center></td>";
+					htmlString += "<td style=\"padding: 10px " + cellPadding + "px\""; 
+					
+					//decide whether or not to show borders 
+					if(borders){
+						htmlString += ">";
+					} else {
+						htmlString += " class=\"noBorders\">"
+					};
+					
+					htmlString += "<center><p class=\"cellPara\" style=\"font-size:" + fontSize + "px\">";
+					htmlString += cards[i][1];
+					htmlString += "</p></center></td>";
+					htmlString += "</tr>"
+					pageHeight += cardHeights[i];
+				};
+				
+				//close off html 
+				htmlString += "</table></body></html>";
+				
+				cardWindow.document.open();
+					
+				cardWindow.document.write(htmlString);
+				
+				cardWindow.document.close();
+					
+				setTimeout(function(){
+					
+					//print cardWindow 
+					cardWindow.print();
+					
+					//close popup
+					if(closeWindow){
+						cardWindow.close();
+					};
+				},500)
+			},500);
+		};
+		
+		//run cards 
+		function runCards(){
+			//create popup window 
+			var cardWindow = window.open();
+			
+			//reset runCardIndex
+			runCardIndex = 0;
+			
+			//create html string 
+			var htmlString = "<!DOCTYPE html><html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"main.css\"/><title>Run Flashcards</title></head><body><center><header><h1>Run Flashcards</h1></header><section>";
+			
+			//add html string 
+			htmlString += "<div id=\"cardBoard\" class=\"cardBoard\">Loading...</div><br/><button onclick=\"previousCard()\">Previous Card</button><button onclick=\"flipCard()\">Flip Card</button><button onclick=\"nextCard()\">Next Card</button><br/><br/><button onclick=\"returnToMenu()\">Return to Creator</button>";
+		
+			//add html temporarily 
+			cardWindow.document.open();
+			cardWindow.document.write(htmlString + "</section></body></html>");
+			cardWindow.document.close();
+			
+			setTimeout(function(){
+				//create script 
+				htmlString += "\<script\>var cards = [\n";
+				
+				//add card to array
+				var appendString = "";
+				var characterCounter = 0;
+				var j = 0;
+				var temporaryAppendString = appendString;
+				var temporaryCharacterDisplacement = 0;
+				
+				for(i = 0; i < cardCount; i++){
+					//retrieve data from text box 1
+					appendString = document.getElementById("input" + (i+1) + "A").value;
+				
+					//turn existing line breaks into required ones 
+					appendString = appendString.replace(/<br>/g,"<br\/>");
+				
+					//remove \n from string with global modifier 
+					appendString = appendString.replace(/\n/g, " ");
+					
+					//remove < from string with global modifier 
+					appendString = appendString.replace(/</g,"&lt");
+					
+					//remove > from string with global modifier 
+					appendString = appendString.replace(/>/g,"&gt");
+					
+					//add line breaks back in 
+					appendString = appendString.replace(/&ltbr\/&gt/g,"<br/>");
+					
+					//add bold back in 
+					appendString = appendString.replace(/&ltb&gt/g,"<b>");
+					
+					//add bold back in 
+					appendString = appendString.replace(/&lt\/b&gt/g,"</b>");
+					
+					//add sub back in 
+					appendString = appendString.replace(/&ltsub&gt/g,"<sub>");
+					
+					//add sub closing back in 
+					appendString = appendString.replace(/&lt\/sub&gt/g,"</sub>");
+					
+					//add sup back in 
+					appendString = appendString.replace(/&ltsup&gt/g,"<sup>");
+					
+					//add sup closing back in 
+					appendString = appendString.replace(/&lt\/sup&gt/g,"</sup>");
+					
+					//remove \" from string with global modifier 
+					appendString = appendString.replace(/"/g,"\\\"");
+					
+					//reset local variables 
+					characterCounter = 0;
+					j = 0;
+					temporaryAppendString = appendString;
+					temporaryCharacterDisplacement = 0;
+					
+					//add line breaks to append string
+					for(j = 0; j < appendString.length; j++){
+						if(appendString[j] == " "){
+							characterCounter = 0;
+						} else if(characterCounter > (cardWindow.document.getElementById("cardBoard").clientWidth) / fontSize){
+							characterCounter = 0;
+							temporaryAppendString = temporaryAppendString.substring(0,j + temporaryCharacterDisplacement) + "<br/>" + appendString.substring(j, appendString.length - 1);
+							temporaryCharacterDisplacement += 5;
+						};
+						
+						characterCounter ++;
+					};
+					
+					//set append string to temporaryAppendString
+					appendString = temporaryAppendString
+					
+					//get front of card 				
+					htmlString += "\t[\"<h2>Flashcard " + (i + 1) + " - Front: </h2><br/><br/><p style=\\\"font-size: " + fontSize + "px\\\">" + appendString + "</p><br/>";
+				
+					//create image if one should exist 
+					if(images[i][0] != ""){
+						htmlString += "<img src='" + images[i][0].src + "'>";
+					};
+					
+					
+					//retrieve data from text box 2
+					appendString = document.getElementById("input" + (i+1) + "B").value;
+				
+					//define local variables 
+					characterCounter = 0;
+					j = 0;
+					temporaryAppendString = appendString;
+					temporaryCharacterDisplacement = 0;
+					
+					//turn existing line breaks into required ones 
+					appendString = appendString.replace(/<br>/g,"<br\/>");
+					
+					//remove \n from string with global modifier 
+					appendString = appendString.replace(/\n/g, " ");
+					
+					//remove < from string with global modifier 
+					appendString = appendString.replace(/</g,"&lt");
+					
+					//remove > from string with global modifier 
+					appendString = appendString.replace(/>/g,"&gt");
+					
+					//add line breaks back in 
+					appendString = appendString.replace(/&ltbr\/&gt/g,"<br/>");
+					
+					//add bold back in 
+					appendString = appendString.replace(/&ltb&gt/g,"<b>");
+					
+					//add bold back in 
+					appendString = appendString.replace(/&lt\/b&gt/g,"</b>");
+					
+					//add sub back in 
+					appendString = appendString.replace(/&ltsub&gt/g,"<sub>");
+					
+					//add sub closing back in 
+					appendString = appendString.replace(/&lt\/sub&gt/g,"</sub>");
+					
+					//add sup back in 
+					appendString = appendString.replace(/&ltsup&gt/g,"<sup>");
+					
+					//add sup closing back in 
+					appendString = appendString.replace(/&lt\/sup&gt/g,"</sup>");
+					
+					//remove " and \" from string with global modifier 
+					appendString = appendString.replace(/"/g,'\\\"');
+				
+					//reset local variables 
+					characterCounter = 0;
+					j = 0;
+					temporaryAppendString = appendString;
+					temporaryCharacterDisplacement = 0;
+					
+					//add line breaks to append string
+					for(j = 0; j < appendString.length; j++){
+						if(appendString[j] == " "){
+							characterCounter = 0;
+						} else if(characterCounter > (cardWindow.document.getElementById("cardBoard").clientWidth) / fontSize){
+							characterCounter = 0;
+							temporaryAppendString = temporaryAppendString.substring(0,j + temporaryCharacterDisplacement) + "<br/>" + appendString.substring(j, appendString.length - 1);
+							temporaryCharacterDisplacement += 5;
+						};
+						
+						characterCounter ++;
+					};
+					
+					//set append string to temporaryAppendString
+					appendString = temporaryAppendString
+					
+					//get front of card 				
+					htmlString += "\",\"<h2>Flashcard " + (i + 1) + " - Back: </h2><br/><br/><p style=\\\"font-size: " + fontSize + "px\\\">" + appendString + "</p><br/>";
+				
+					//create image if one should exist 
+					if(images[i][1] != ""){
+						htmlString += "<img src='" + images[i][1].src + "'>";
+					};
+					/*
+					//text 2
+					appendString = document.getElementById("input" + (i+1) + "B").value;
+					
+					//remove \n from string with global modifier 
+					appendString = appendString.replace(/\n/g, " ");
+					
+					//remove < from string with global modifier 
+					appendString = appendString.replace(/</g,"&lt");
+					
+					//remove > from string with global modifier 
+					appendString = appendString.replace(/>/g,"&gt");
+					
+					//add line breaks back in 
+					appendString = appendString.replace(/&ltbr&gt/g,"<br>");
+					
+					//remove \" from string with global modifier 
+					appendString = appendString.replace(/"/g,"\\\"");
+					
+					//reset variables 
+					characterCounter = 0;
+					j = 0;
+					temporaryAppendString = appendString;
+					temporaryCharacterDisplacement = 0;
+					
+					//add line breaks to append string
+					for(j = 0; j < appendString.length; j++){
+						if(appendString[j] == " "){
+							characterCounter = 0;
+						} else if(characterCounter > (cardWindow.document.getElementById("cardBoard").clientWidth) / fontSize){
+							characterCounter = 0;
+							temporaryAppendString = temporaryAppendString.substring(0,j + temporaryCharacterDisplacement) + "<br/>" + appendString.substring(j, appendString.length - 1);
+							temporaryCharacterDisplacement += 5;
+						};
+						
+						characterCounter ++;
+					};
+					
+					//set append string to temporaryAppendString
+					appendString = temporaryAppendString
+					
+					//htmlString += "\",\"<h2>Flashcard " + (i + 1) + " - Back: </h2><br/><br/><p style=\\\"font-size: " + fontSize + "px\\\">" + appendString + "</p><br/>";
+					
+					//set back of card
+					htmlString += ",\"<h2>Flashcard " + (i + 1) + " - Back: </h2><br/><br/><p style=\\\"font-size: " + fontSize + "px\\\">" + appendString + "</p><br/>";
+				
+					//create image if one should exist 
+					if(images[i][1] != ""){
+						htmlString += "<img src='" + images[i][1].src + "'>";
+					};
+					*/
+					
+					htmlString += "\"],\n";
+				};
+				
+				htmlString += "\n];\nvar runCardIndex = 0;\nvar cardSide = 0;\nfunction loadCard(){\n\tdocument.getElementById(\"cardBoard\").innerHTML = cards[runCardIndex][cardSide]\n};\nfunction nextCard(){if(runCardIndex < cards.length - 1){cardSide = 0; runCardIndex ++;loadCard();};}; function previousCard(){if(runCardIndex > 0){cardSide = 0;runCardIndex --;loadCard();};};function flipCard(){if(cardSide == 1){cardSide = 0;} else {cardSide = 1;};loadCard();};function returnToMenu(){window.close();};loadCard();\</script\>"
+				
+				//close off html string 
+				htmlString += "</section></center></body></html>";
+				
+				//open window document
+				cardWindow.document.open();
+				
+				cardWindow.document.write(htmlString);
+				
+				//close window document 
+				cardWindow.document.close();
+			},500);
+		};
+		
+		function uploadImage(evt){
+			var files = evt.target.files; //this gets data about the file
+			var f = files[0]; //this gets the filename 
+			
+			//clear image if necessary
+			if(f == undefined){
+				//clear image
+				var number = evt.target.id.substring(5,evt.target.id.length - 1);
+				document.getElementById("input" + number + "I").innerHTML = "No image selected";
+			
+				images[parseInt(number) - 1][0] = "";
+			};
+			
+			//create reader 
+			var reader = new FileReader();
+			
+			//set reader onload function 
+			reader.onload = function(theFile){
+				//this code (theFile.target.result) will get the exact link to the image 
+				//store the value in an array
+				var image = new Image();
+				image.src = theFile.target.result;
+		
+				image.onload = function(){
+					//get width and height 
+					if(image.width > image.height){
+						//landscape
+						var ratio = image.height / image.width;
+						
+						if(image.width > 400){
+							image.width = 400;
+							image.height = ratio * image.width;
+						};
+					} else {
+						//portrait
+						var ratio = image.width / image.height;
+						
+						if(image.height > 200){
+							image.height = 200;
+							image.width = ratio * image.height;
+						};
+					}; 
+					
+					var number = evt.target.id.substring(5,evt.target.id.length - 1);
+					document.getElementById("input" + number + "I").innerHTML = "<img id=\"img" + number + "A\" src=\"" + image.src + "\"; style=\"max-width:100px; max-height:100px;\" />";
+			
+					images[parseInt(number) - 1][0] = image;
+				};
+			};
+			
+			if(f){
+				reader.readAsDataURL(f);
+			};
+		};
+		
+		function uploadImage2(evt){
+			//check that a valid file has been given
+			if(f == undefined){
+				//clear image
+				var number = evt.target.id.substring(5,evt.target.id.length - 1);
+				document.getElementById("input" + number + "J").innerHTML = "No image selected";
+			
+				images[parseInt(number) - 1][1] = "";
+			};
+			
+			var files = evt.target.files; //this gets data about the file
+			var f = files[0]; //this gets the filename 
+			
+			//create reader 
+			var reader = new FileReader();
+			
+			//set reader onload function 
+			reader.onload = function(theFile){
+				//this code (theFile.target.result) will get the exact link to the image 
+				//store the value in an array
+				var image = new Image();
+				image.src = theFile.target.result;
+				
+				image.onload = function(){
+					//get width and height 
+					if(image.width > image.height){
+						//landscape
+						var ratio = image.height / image.width;
+						
+						if(image.width > 500){
+							image.width = 400;
+							image.height = ratio * image.width;
+						};
+					} else {
+						//portrait
+						var ratio = image.width / image.height;
+						
+						if(image.height > 200){
+							image.height = 200;
+							image.width = ratio * image.height;
+						};
+					}; 
+					
+					var number = evt.target.id.substring(5,evt.target.id.length - 1);
+					document.getElementById("input" + number + "J").innerHTML = "<img id=\"img" + number + "B\" src=\"" + image.src + "\"; style=\"max-width:100px; max-height:100px;\" />";
+
+					images[parseInt(number) - 1][1] = image;
+				};
+			};
+			
+			if(f){
+				reader.readAsDataURL(f);
+			};
+		};
+		
+		//save
+		function save(){
+			//ask for title 
+			var title = prompt("Please enter a title for your save:");
+			
+			if(!title){
+				return 0;
+			};
+			
+			var fileExists = -1;
+			var saveObject = null;
+		
+			//add slot to localStorage 
+			if(!localStorage.flashcards1234567890SaveFile){
+				saveObject = {save:[]};
+			} else {
+				//retrieve save object;
+				saveObject = JSON.parse(localStorage.getItem("flashcards1234567890SaveFile"));
+				
+				//search to see if the save exists already 
+				for(i = 0; i < saveObject.save.length; i++){
+					//check if the title matches
+					if(saveObject.save[i][0] == title){
+						if(!confirm("This save exists already, would you like to overwrite?")){
+							//return
+							return 0;
+						};
+						fileExists = i;
+					};
+				};
+			};
+			
+			//save file 
+			if(fileExists == -1){
+				//set file exists to next slot 
+				fileExists = saveObject.save.length;
+				saveObject.save.push([]);
+			};
+			
+			//create array of text for all cards 
+			var textArray = [];
+			
+			for(i = 0; i < cardCount; i++){
+				textArray.push([]);
+				textArray[textArray.length - 1][0] = document.getElementById("input" + (i + 1) + "A").value;
+				textArray[textArray.length - 1][1] = document.getElementById("input" + (i + 1) + "B").value;
+			};
+			
+			//save to fileExists slot 
+			saveObject.save[fileExists][0] = title;
+			saveObject.save[fileExists][1] = textArray;
+			saveObject.save[fileExists][2] = [];
+			
+			for(i = 0; i < images.length; i++){
+				//add image src, width, etc.
+				saveObject.save[fileExists][2][i] = [images[i][0].src,images[i][0].width,images[i][0].height,images[i][1].src,images[i][1].width,images[i][1].height];
+			};
+			
+			//stringify object 
+			localStorage.flashcards1234567890SaveFile = JSON.stringify(saveObject);
+		};
+		
+		//load 
+		function load(){
+			//create new popup window 
+			var menu = window.open();
+			var menuHTMLString = "<html><head><title>Save Selector</title><link rel=\"stylesheet\" type=\"text/css\" href=\"main.css\"></head><body><center><header><h1>Load Saves Menu</h1></header><section><h2>Please select a save to load from the list below:</h2><br/><form id=\"loadForm\"></form></section></center></body></html>"
+			
+			//open menu document
+			menu.document.open();
+			
+			menu.document.write(menuHTMLString);
+			
+			//store form as variable
+			var loadForm = menu.document.getElementById("loadForm");
+		
+			var buttons = [];
+			var loadObject = null;
+			
+			//create and read load object 
+			if(localStorage.flashcards1234567890SaveFile){
+				if(JSON.parse(localStorage.getItem("flashcards1234567890SaveFile"))){
+					//load object
+					loadObject = JSON.parse(localStorage.getItem("flashcards1234567890SaveFile"));
+
+					//check if loadObject has a save 
+					if(!loadObject.save){
+						//corrupted 
+						menu.close();
+						alert("Unfortunately, your saves have corrupted. They will all be cleared so that you can still save in the future.");
+						
+						var testObject = {save:[]};
+						
+						localStorage.flashcards1234567890SaveFile = JSON.stringify(testObject);
+					};
+					
+					//read loadObject 					
+					for(i = 0; i < loadObject.save.length; i++){
+						let number = i;
+						buttons.push(document.createElement("button"));
+						buttons[buttons.length - 1].innerHTML = loadObject.save[number][0]; //set button text to save name 
+						buttons[buttons.length - 1].onclick = function(){
+							//clear cards
+							var initialCardCount = cardCount;
+							for(let j = 0; j < initialCardCount; j++){
+								removeCard();
+							};	
+							
+							//set innerHTML of flashcards page
+							for(let j = 0; j < loadObject.save[number][1].length; j++){
+								//create card 
+								addCard();
+								
+								//set data for card 
+								document.getElementById("input" + (j + 1) + "A").value = loadObject.save[number][1][j][0];
+								document.getElementById("input" + (j + 1) + "B").value = loadObject.save[number][1][j][1];
+							};
+							
+							//set images 
+							images = [];
+							for(let j = 0; j < loadObject.save[number][2].length; j++){
+								let img1 = new Image();
+							
+								if(loadObject.save[number][2][j][0]){
+									img1.src = loadObject.save[number][2][j][0];
+									img1.width = loadObject.save[number][2][j][1];
+									img1.height = loadObject.save[number][2][j][2];
+									
+									//set img name 
+									document.getElementById("input" + (j+1) + "I").innerHTML = "<img id=\"img" + (j+1) + "A\" src=\"" + img1.src + "\"; style=\"max-width:100px; max-height:100px;\" />";
+								} else {
+									img1.src = "";
+								};
+								
+								let img2 = new Image();
+								if(loadObject.save[number][2][j][3]){
+									img2.src = loadObject.save[number][2][j][3];
+									img2.width = loadObject.save[number][2][j][4];
+									img2.height = loadObject.save[number][2][j][5];
+									
+									//set fileselected? innerhmtl 
+									document.getElementById("input" + (j+1) + "J").innerHTML = "<img id=\"img" + (j+1) + "B\" src=\"" + img2.src + "\"; style=\"max-width:100px; max-height:100px;\" />";
+								} else {
+									img2.src = "";
+								};
+								
+								images.push([img1,img2]);
+							};
+							
+							//close 
+							menu.document.close();
+							menu.close();
+						};
+					};
+					
+					//create cancel button 
+					var cancelButton = document.createElement("button");
+					cancelButton.onclick = function(){
+						menu.document.close();
+						menu.close();
+					};
+					
+					cancelButton.innerHTML = "Cancel Load Request";
+					buttons.push(cancelButton);
+					
+					//add buttons to loadForm
+					for(i = 0; i < buttons.length; i++){
+						loadForm.appendChild(buttons[i]);
+						loadForm.appendChild(document.createElement("br"));
+					};
+				} else {
+					menu.close();0
+					alert("An error has occured, returning to main page.");
+				};
+			} else {
+				menu.close();
+				alert("You do not have any save files.");
+			};
+		};
+		
+		//delete save
+		function deleteASave(){
+			//create new popup window 
+			var menu = window.open();
+			var menuHTMLString = "<html><head><title>Save Selector</title><link rel=\"stylesheet\" type=\"text/css\" href=\"main.css\"></head><body><center><header><h1>Load Saves Menu</h1></header><section><h2>Please select a save to load from the list below:</h2><br/><form id=\"loadForm\"></form></section></center></body></html>"
+			
+			//open menu document
+			menu.document.open();
+			
+			menu.document.write(menuHTMLString);
+			
+			//store form as variable
+			var loadForm = menu.document.getElementById("loadForm");
+			var buttons = [];
+			var loadObject = null;
+			
+			//create and read load object 
+			if(localStorage.flashcards1234567890SaveFile){
+				if(JSON.parse(localStorage.getItem("flashcards1234567890SaveFile"))){
+					//load object
+					loadObject = JSON.parse(localStorage.getItem("flashcards1234567890SaveFile"));
+
+					//check if loadObject has a save 
+					if(!loadObject.save){
+						//corrupted 
+						menu.close();
+						alert("Unfortunately, your saves have corrupted. They will all be cleared so that you can still save in the future.");
+						
+						var testObject = {save:[]};
+						
+						localStorage.flashcards1234567890SaveFile = JSON.stringify(testObject);
+					};
+					
+					//read loadObject 					
+					for(i = 0; i < loadObject.save.length; i++){
+						let number = i;
+						buttons.push(document.createElement("button"));
+						buttons[buttons.length - 1].innerHTML = loadObject.save[number][0]; //set button text to save name 
+						buttons[buttons.length - 1].onclick = function(){
+							//save = loadObject.save[number]
+							var temporaryArray = [];
+							
+							//reconstruct array
+							for(let j = 0; j < loadObject.save.length; j++){
+								//filter array
+								if(j != number){
+									temporaryArray.push(loadObject.save[j]);
+								};
+							};
+							
+							//set save to temporaryArray
+							loadObject.save = temporaryArray;
+							
+							//make changes to stored save 
+							localStorage.flashcards1234567890SaveFile = JSON.stringify(loadObject);
+							
+							//close 
+							menu.document.close();
+							menu.close();
+						};
+					};
+					
+					//create cancel button 
+					var cancelButton = document.createElement("button");
+					cancelButton.onclick = function(){
+						menu.document.close();
+						menu.close();
+					};
+					cancelButton.innerHTML = "Cancel Load Request";
+					buttons.push(cancelButton);
+					
+					//add buttons to loadForm
+					for(i = 0; i < buttons.length; i++){
+						loadForm.appendChild(buttons[i]);
+						loadForm.appendChild(document.createElement("br"));
+					};
+				} else {
+					menu.close();
+					alert("An error has occured, returning to main page.");
+				};
+			} else {
+				menu.close();
+				alert("You do not have any save files.");
+			};
+		};
+		
+		//close popup window 
+		function closePopup(){
+			if(closeWindow){
+				//set closeWindow to false 
+				closeWindow = false;
+				
+				//change button html 
+				closeWindowButton.innerHTML = "Close Card Popup After Printing: Off";
+			} else {
+				//set closeWindow to true
+				closeWindow = true;
+				
+				//change button html
+				closeWindowButton.innerHTML = "Close Card Popup After Printing: On";
+			};
+		};
+		
+		//display borders 
+		function displayBorders(){
+			if(borders){
+				//set borders to false 
+				borders = false;
+				
+				//change button html 
+				bordersButton.innerHTML = "Display Flashcard Borders: Off";
+			} else {
+				//set borders to true
+				borders = true;
+				
+				//change button html
+				bordersButton.innerHTML = "Display Flashcard Borders: On";
+			};
+		};
+		
+		//print title 
+		function printTitle(){
+			if(displayTitle){
+				//set displayTitle to false 
+				displayTitle = false;
+				
+				//change button html 
+				printTitleButton.innerHTML = "Display Flashcard Title, Page Number and Margin: Off";
+			} else {
+				//set displayTitle to true
+				displayTitle = true;
+				
+				//change button html
+				printTitleButton.innerHTML = "Display Flashcard Title, Page Number and Margin: On";
+			};
+		};
+		
+		//save to external file 
+		function saveToExternalFile(){
+			//set 
+			var fileName = prompt("What would you like the name of your file to be?");
+			
+			//check that name is valid 
+			if(fileName){
+				//create save string 
+				var saveString = "";
+				
+				//add card number to save string 
+				saveString += cardCount + "¬";
+				
+				//iterate cards 
+				for(i = 0; i < cardCount; i++){
+					//add text length 
+					saveString += document.getElementById("input" + (i+1) + "A").value.length + "¬";
+					
+					//sanitise text 1 			
+					for(j = 0; j < document.getElementById("input" + (i+1) + "A").value.length; j++){
+						if(document.getElementById("input" + (i+1) + "A").value[j] == "¬"){
+							//remove 
+							document.getElementById("input" + (i+1) + "A").value[j] = " ";
+						};
+					};
+					
+					//get text for front
+					saveString += document.getElementById("input" + (i+1) + "A").value + "¬";
+					
+					//add image 1
+					if(images[i][0] != ""){
+						//add src length 
+						saveString += images[i][0].src.length + "¬";
+						
+						//add image src to save
+						saveString += images[i][0].src;
+					} else {
+						//add src length 
+						saveString += "0¬";
+					}; 
+				
+					//close
+					saveString += "¬";
+					
+					//add text 2 length 
+					saveString += document.getElementById("input" + (i+1) + "B").value.length + "¬";
+					
+					//sanitise text 2
+					for(j = 0; j < document.getElementById("input" + (i+1) + "B").value.length; j++){
+						if(document.getElementById("input" + (i+1) + "B").value[j] == "¬"){
+							//remove 
+							document.getElementById("input" + (i+1) + "B").value[j] = " ";
+						};
+					};
+					
+					//get text for back
+					saveString += document.getElementById("input" + (i+1) + "B").value + "¬";
+					
+					//add image 2
+					if(images[i][1] != ""){
+						//add src length 
+						saveString += images[i][1].src.length + "¬";
+						
+						//add image src to save
+						saveString += images[i][1].src;
+					} else {
+						//add src length 
+						saveString += "0¬";
+					};
+					
+					//close 
+					saveString += "¬";
+				};
+				
+				//download 
+				var element = document.createElement("a");
+				element.setAttribute("href","data:text/plain;charset=utf-8," + encodeURIComponent(saveString));
+				element.setAttribute("download", fileName + ".cardset");
+				element.style.display = "none";
+				document.body.appendChild(element);
+				element.click();
+				document.body.removeChild(element);
+			};
+		};
+		
+		//set event listener for the load external button
+		document.getElementById('loadExternal').addEventListener('change', function() { 
+            //create file reader  
+            var fr=new FileReader();
+			
+			//check for false path 
+			if(this.files[0]){
+				if(this.files[0].name.substring(this.files[0].name.length - 8,this.files[0].name.length).toLowerCase() == ".cardset"){
+					//set onload for file reader
+					fr.onload=function(){ 
+						//set general inner html
+						var loadString=fr.result; 
+					
+						//remove all cards 
+						var currentCardCount = cardCount;
+						for(i = 0; i < currentCardCount; i++){
+							removeCard();
+						};
+						
+						//reset card count 
+						cardCount = 0;
+						
+						//reset card board innerhtml 
+						images = [];
+						
+						//retrieve new card count 
+						var cardCountIndex = 0;
+				
+						while(loadString[cardCountIndex] != '¬'){
+							cardCountIndex ++;
+						};
+						
+						//increment to next index 
+						cardCountIndex ++;
+						
+						//add new cards 
+						for(i = 0; i < parseInt(loadString.substring(0,cardCountIndex)); i++){
+							addCard();
+						};
+						
+						//add data to cards
+						var startTextIndex = cardCountIndex;
+						var cardCountIncrease = 0;
+						for(i = 0; i < cardCount; i++){
+							//extract string 
+							while(loadString[cardCountIndex] != "¬"){
+								cardCountIndex ++;
+							};
+						
+							//skip places based off of retrieved length 
+							cardCountIncrease = parseInt(loadString.substring(startTextIndex,cardCountIndex));
+							
+							//increase startTestIndex
+							cardCountIndex ++;
+							startTextIndex = cardCountIndex;
+							
+							//increase card count 
+							cardCountIndex += cardCountIncrease;
+							
+							//set text 1
+							document.getElementById("input" + (i+1) + "A").innerHTML = loadString.substring(startTextIndex,cardCountIndex);
+							
+							//reset startTextIndex
+							cardCountIndex ++;
+							startTextIndex = cardCountIndex;
+						
+							//extract string 
+							while(loadString[cardCountIndex] != "¬"){
+								cardCountIndex ++;
+							};
+							
+							//skip places based off of retrieved length
+							cardCountIncrease = parseInt(loadString.substring(startTextIndex,cardCountIndex));
+							
+							//increase startTestIndex
+							cardCountIndex ++;
+							startTextIndex = cardCountIndex;
+							
+							//increase card count 
+							cardCountIndex += cardCountIncrease;
+							
+							//set image 1 - determine whether there is an actual image there 
+							if(loadString.substring(startTextIndex,cardCountIndex).substring(0,4) != "data"){
+								document.getElementById("input" + (i+1) + "I").innerHTML = "No image selected.";
+							} else {
+								document.getElementById("input" + (i+1) + "I").innerHTML = "<img id=\"img" + (i + 1) + "A\" src=\"" + loadString.substring(startTextIndex,cardCountIndex) + "\" style=\"max-width:100px; max-height:100px;\"></img>"
+								images[i][0] = new Image();
+								images[i][0].src = loadString.substring(startTextIndex,cardCountIndex);
+							};
+							
+							//reset startTextIndex
+							cardCountIndex ++;
+							startTextIndex = cardCountIndex;
+							
+							//extract string 
+							while(loadString[cardCountIndex] != "¬"){
+								cardCountIndex ++;
+							};
+							
+							//extract string 
+							while(loadString[cardCountIndex] != "¬"){
+								cardCountIndex ++;
+							};
+							
+							//skip places based off of retrieved length
+							cardCountIncrease = parseInt(loadString.substring(startTextIndex,cardCountIndex));
+							
+							//increase startTestIndex
+							cardCountIndex ++;
+							startTextIndex = cardCountIndex;
+							
+							//increase card count 
+							cardCountIndex += cardCountIncrease;
+						
+							//set text 2
+							document.getElementById("input" + (i+1) + "B").innerHTML = loadString.substring(startTextIndex,cardCountIndex);
+							
+							//reset startTextIndex
+							cardCountIndex ++;
+							startTextIndex = cardCountIndex;
+							
+							//extract string 
+							while(loadString[cardCountIndex] != "¬"){
+								cardCountIndex ++;
+							};
+					
+							//skip places based off of retrieved length
+							cardCountIncrease = parseInt(loadString.substring(startTextIndex,cardCountIndex));
+							
+							//increase startTestIndex
+							cardCountIndex ++;
+							startTextIndex = cardCountIndex;
+							
+							//increase card count 
+							cardCountIndex += cardCountIncrease;
+						
+							//set image 2
+							if(loadString.substring(startTextIndex,cardCountIndex).substring(0,4) != "data"){
+								document.getElementById("input" + (i+1) + "J").innerHTML = "No image selected.";
+							} else {
+								document.getElementById("input" + (i+1) + "J").innerHTML = "<img id=\"img" + (i + 1) + "B\" src=\"" + loadString.substring(startTextIndex,cardCountIndex) + "\" style=\"max-width:100px; max-height:100px;\"></img>"
+								images[i][1] = new Image();
+								images[i][1].src = loadString.substring(startTextIndex,cardCountIndex);
+							};
+							
+							//reset startTextIndex
+							cardCountIndex ++;
+							startTextIndex = cardCountIndex;
+						};
+					}; 
+					
+					//read text from file reader
+					fr.readAsText(this.files[0]); 
+				} else {
+					//file is not valid 
+					alert("Please select a .cardset file!");
+				};
+			};
+        });
+		
+		//set padding 
+		function setPadding(){
+			cellPadding = document.getElementById("paddingSetter").value;
+			
+			//set inner html 2
+			document.getElementById("paddingCounter").innerHTML = "Card Width Padding (the Amount of Surrounding Whitespace for Each Card in Pixels): " + cellPadding;
+		};
+		
+		//set font size
+		function setFontSize(){
+			fontSize = document.getElementById("fontSizeSetter").value;
+			
+			//set inner html 2
+			document.getElementById("fontSizeCounter").innerHTML = "Font Size (in Pixels When Cards Are Printed or Ran): " + fontSize;
+		};
+			
+		//go to instructions 
+		function goToInstructions(){
+			//create instructions popup window 
+			var instructionsWindow = window.open();
+			instructionsWindow.location = "instructions.html";
+		};
+		
+		//add 1 card 
+		addCard();
+	</script>
+</body>
+</html>
