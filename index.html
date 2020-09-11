@@ -1839,19 +1839,43 @@
 			alert("Because you are on mobile, you cannot load a .cardset file. You can save to one and transfer it to a laptop/desktop or you can instead save to local storage. Your print window will automatically stay open after printing. Simply press back to go back to your creator section.");
 		
 			//change buttons 
-			document.getElementById("saveExternal").innerHTML = "Save to .cardset file (for PC use only)";
-			document.getElementById("loadExternal").remove();
-			document.getElementById("loadingText").remove();
-			document.getElementById("loadingBr1").remove();
-			document.getElementById("loadingBr2").remove();
-			document.getElementById("loadingBr3").remove();
-			document.getElementById("loadingBr4").remove();
+			if(document.getElementById("saveExternal")){
+				document.getElementById("saveExternal").innerHTML = "Save to .cardset file (for PC use only)";
+			};
+			
+			if(document.getElementById("loadExternal")){
+				document.getElementById("loadExternal").remove();
+			};
+			
+			if(document.getElementById("loadText")){
+				document.getElementById("loadingText").remove();
+			};
+			
+			if(document.getElementById("loadingBr1")){
+				document.getElementById("loadingBr1").remove();
+			};
+			
+			if(document.getElementById("loadingBr2")){
+				document.getElementById("loadingBr2").remove();
+			};
+			
+			if(document.getElementById("loadingBr3")){
+				document.getElementById("loadingBr3").remove();
+			};
+			
+			if(document.getElementById("loadingBr4")){
+				document.getElementById("loadingBr4").remove();
+			};
 			
 			//change text on loading 
-			document.getElementById("loadingText2").innerHTML = "Loading";
+			if(document.getElementById("loadingText2")){
+				document.getElementById("loadingText2").innerHTML = "Loading";
+			};
 			
 			//create new save 
-			document.getElementById("newSave").innerHTML="<br/><hr/><h2>Saving to Browser Local Storage</h2><br/><button onclick=\"save()\">Save</button><br/>";
+			if(document.getElementById("newSave")){
+				document.getElementById("newSave").innerHTML="<br/><hr/><h2>Saving to Browser Local Storage</h2><br/><button onclick=\"save()\">Save</button><br/>";
+			};
 			
 			//get rid of close popup after printing 
 			closeWindow = false;
