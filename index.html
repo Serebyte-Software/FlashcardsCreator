@@ -167,6 +167,8 @@
 			
 			<input type="file" accept=".cardset" id="loadExternal">Load .cardset File</input>
 			
+			<br id="loadingBr1"/>
+			
 			<br id="loadingBr2"/>
 			
 			<br id="loadingBr3"/>
@@ -184,8 +186,6 @@
 			<button onclick="load()">
 				Load From Browser Local Storage
 			</button>
-		
-			<br id="loadingBr1"/>
 		</center>
 	</section>
 	
@@ -247,6 +247,7 @@
 			alert("Because you are on mobile, you cannot load a .cardset file. You can save to one and transfer it to a laptop/desktop or you can instead save to local storage. Your print window will automatically stay open after printing. Simply press back to go back to your creator section.");
 		
 			//change buttons 
+			
 			document.getElementById("saveExternal").innerHTML = "Save to .cardset file (for PC use only)";
 			document.getElementById("loadExternal").remove();
 			document.getElementById("loadingText").remove();
