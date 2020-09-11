@@ -134,7 +134,7 @@
 			<hr/>
 			
 			<h2>
-				Saving
+				Saving To A File
 			</h2>
 			
 			<button onclick="saveToExternalFile()" id="saveExternal">Save to .cardset File</button>
@@ -145,11 +145,49 @@
 			
 			<hr/>
 			
-			<h2 id="loadingText">
-				Loading
+			<h2>
+				Saving to A File (Mobile)
 			</h2>
 			
+			<button onclick="saveMobile()" id="saveMobile">
+				Save to .newcardset File
+			</button>
+			
+			<br/>
+			
+			<br/>
+			
+			<hr/>
+			
+			<h2 id="loadingmText">
+				Loading From a .newcardset File (Works on Mobile)
+			</h2>
+			
+			<br id="loadingMobileBr1"/>
+			
+			<input type="file" accept=".newcardset" id="loadExternalMobile">Load .newcardset File</input>
+			
+			<br id="loadingMobileBr2"/>
+			
+			<br id="loadingMobileBr3"/>
+			
+			<hr id="loadingMobileBr4"/>
+			
+			<br/>
+			
+			<h2 id="loadingText2">
+				Loading (From Saves Predating Version 1.7)
+			</h2>
+			
+			<br/>
+			
+			<button onclick="load()">
+				Load From Browser Local Storage
+			</button>
+		
 			<br id="loadingBr1"/>
+			
+			<h3>Loading From a .cardset File</h3>
 			
 			<input type="file" accept=".cardset" id="loadExternal">Load .cardset File</input>
 			
@@ -158,16 +196,6 @@
 			<br id="loadingBr3"/>
 			
 			<hr id="loadingBr4"/>
-			
-			<h2 id="loadingText2">
-				Loading (From Saves Predating Version 1.6)
-			</h2>
-			
-			<br/>
-			
-			<button onclick="load()">
-				Load From Browser Local Storage
-			</button>
 		</center>
 	</section>
 	
@@ -245,7 +273,7 @@
 			
 			//get rid of close popup after printing 
 			closeWindow = false;
-			closeWindowButton.remove();
+			closeWindowButton.remove();		
 		};
 		
 		//add card 
@@ -1298,6 +1326,196 @@
 			};
 		};
 		
+		//save mobile 
+		function saveMobile(){
+			//ask for title 
+			var title = prompt("Please enter a title for your save:");
+			
+			if(!title){
+				return 0;
+			};
+			
+			var fileExists = -1;
+			var saveObject = {
+				save:[[]],
+			};
+			
+			/*
+			//add slot to localStorage 
+			if(!localStorage.flashcards1234567890SaveFile){
+				saveObject = {save:[]};
+			} else {
+				//retrieve save object;
+				saveObject = JSON.parse(localStorage.getItem("flashcards1234567890SaveFile"));
+				
+				//search to see if the save exists already 
+				for(i = 0; i < saveObject.save.length; i++){
+					//check if the title matches
+					if(saveObject.save[i][0] == title){
+						if(!confirm("This save exists already, would you like to overwrite?")){
+							//return
+							return 0;
+						};
+						fileExists = i;
+					};
+				};
+			};
+			
+			//save file 
+			if(fileExists == -1){
+				//set file exists to next slot 
+				fileExists = saveObject.save.length;
+				saveObject.save.push([]);
+			};
+			*/
+			
+			//create array of text for all cards 
+			var textArray = [];
+			
+			for(i = 0; i < cardCount; i++){
+				textArray.push([]);
+				textArray[textArray.length - 1][0] = document.getElementById("input" + (i + 1) + "A").value;
+				textArray[textArray.length - 1][1] = document.getElementById("input" + (i + 1) + "B").value;
+			};
+			
+			//save to fileExists slot 
+			saveObject.save[0][0] = title;
+			saveObject.save[0][1] = textArray;
+			saveObject.save[0][2] = [];
+			
+			for(i = 0; i < images.length; i++){
+				//add image src, width, etc.
+				saveObject.save[0][2][i] = [images[i][0].src,images[i][0].width,images[i][0].height,images[i][1].src,images[i][1].width,images[i][1].height];
+			};
+			
+			//create download
+			var element = document.createElement("a");
+			element.setAttribute("href","data:text/plain;charset=utf-8," + encodeURIComponent(JSON.stringify(saveObject)));
+			element.setAttribute("download", title + ".newcardset");
+			element.style.display = "none";
+			document.body.appendChild(element);
+			element.click();
+			document.body.removeChild(element);			
+		};
+		
+		//load external mobile 
+		function loadExternalMobile(){
+			//create new popup window 
+			//var menu = window.open();
+			//var menuHTMLString = "<html><head><title>Save Selector</title><link rel=\"stylesheet\" type=\"text/css\" href=\"main.css\"></head><body><center><header><h1>Load Saves Menu</h1></header><section><h2>Please select a save to load from the list below:</h2><br/><form id=\"loadForm\"></form></section></center></body></html>"
+			
+			//open menu document
+			//menu.document.open();
+			
+			//menu.document.write(menuHTMLString);
+			alert("loading external");
+			//store form as variable
+			var loadForm = menu.document.getElementById("loadForm");
+		
+			var buttons = [];
+			var loadObject = null;
+			
+			//create and read load object 
+			if(localStorage.flashcards1234567890SaveFile){
+				if(JSON.parse(localStorage.getItem("flashcards1234567890SaveFile"))){
+					//load object
+					loadObject = JSON.parse(localStorage.getItem("flashcards1234567890SaveFile"));
+
+					//check if loadObject has a save 
+					if(!loadObject.save){
+						//corrupted 
+						menu.close();
+						alert("Unfortunately, your saves have corrupted. They will all be cleared so that you can still save in the future.");
+						
+						var testObject = {save:[]};
+						
+						localStorage.flashcards1234567890SaveFile = JSON.stringify(testObject);
+					};
+					
+					//read loadObject 					
+					for(i = 0; i < loadObject.save.length; i++){
+						let number = i;
+						buttons.push(document.createElement("button"));
+						buttons[buttons.length - 1].innerHTML = loadObject.save[number][0]; //set button text to save name 
+						buttons[buttons.length - 1].onclick = function(){
+							//clear cards
+							var initialCardCount = cardCount;
+							for(let j = 0; j < initialCardCount; j++){
+								removeCard();
+							};	
+							
+							//set innerHTML of flashcards page
+							for(let j = 0; j < loadObject.save[number][1].length; j++){
+								//create card 
+								addCard();
+								
+								//set data for card 
+								document.getElementById("input" + (j + 1) + "A").value = loadObject.save[number][1][j][0];
+								document.getElementById("input" + (j + 1) + "B").value = loadObject.save[number][1][j][1];
+							};
+							
+							//set images 
+							images = [];
+							for(let j = 0; j < loadObject.save[number][2].length; j++){
+								let img1 = new Image();
+							
+								if(loadObject.save[number][2][j][0]){
+									img1.src = loadObject.save[number][2][j][0];
+									img1.width = loadObject.save[number][2][j][1];
+									img1.height = loadObject.save[number][2][j][2];
+									
+									//set img name 
+									document.getElementById("input" + (j+1) + "I").innerHTML = "<img id=\"img" + (j+1) + "A\" src=\"" + img1.src + "\"; style=\"max-width:100px; max-height:100px;\" />";
+								} else {
+									img1.src = "";
+								};
+								
+								let img2 = new Image();
+								if(loadObject.save[number][2][j][3]){
+									img2.src = loadObject.save[number][2][j][3];
+									img2.width = loadObject.save[number][2][j][4];
+									img2.height = loadObject.save[number][2][j][5];
+									
+									//set fileselected? innerhmtl 
+									document.getElementById("input" + (j+1) + "J").innerHTML = "<img id=\"img" + (j+1) + "B\" src=\"" + img2.src + "\"; style=\"max-width:100px; max-height:100px;\" />";
+								} else {
+									img2.src = "";
+								};
+								
+								images.push([img1,img2]);
+							};
+							
+							//close 
+							menu.document.close();
+							menu.close();
+						};
+					};
+					
+					//create cancel button 
+					var cancelButton = document.createElement("button");
+					cancelButton.onclick = function(){
+						menu.document.close();
+						menu.close();
+					};
+					
+					cancelButton.innerHTML = "Cancel Load Request";
+					buttons.push(cancelButton);
+					
+					//add buttons to loadForm
+					for(i = 0; i < buttons.length; i++){
+						loadForm.appendChild(buttons[i]);
+						loadForm.appendChild(document.createElement("br"));
+					};
+				} else {
+					menu.close();0
+					alert("An error has occured, returning to main page.");
+				};
+			} else {
+				menu.close();
+				alert("You do not have any save files.");
+			};
+		};
+		
 		//save to external file 
 		function saveToExternalFile(){
 			//set 
@@ -1395,7 +1613,7 @@
 					fr.onload=function(){ 
 						//set general inner html
 						var loadString=fr.result; 
-					
+						
 						//remove all cards 
 						var currentCardCount = cardCount;
 						for(i = 0; i < currentCardCount; i++){
@@ -1542,6 +1760,85 @@
 				};
 			};
         });
+		
+		//set event listener for the load externalMobile button
+		document.getElementById('loadExternalMobile').addEventListener('change', function() { 
+			//create file reader  
+            var fr=new FileReader();
+			
+			//check for false path 
+			if(this.files[0]){
+				if(this.files[0].name.substring(this.files[0].name.length - 11,this.files[0].name.length).toLowerCase() == ".newcardset"){
+					//set onload for file reader
+					fr.onload=function(){ 
+						//set general inner html
+						var loadString = fr.result; 
+						
+						//load JSON 
+						loadObject = JSON.parse(loadString);
+
+						//check if loadObject has a save 
+						if(!loadObject.save){
+							//corrupted 
+							alert("Unfortunately, your save has corrupted. They will all be cleared so that you can still save in the future.");
+						};
+						
+						//clear cards
+						var initialCardCount = cardCount;
+						for(let j = 0; j < initialCardCount; j++){
+							removeCard();
+						};	
+						
+						//set innerHTML of flashcards page
+						for(let j = 0; j < loadObject.save[0][1].length; j++){
+							//create card 
+							addCard();
+							
+							//set data for card 
+							document.getElementById("input" + (j + 1) + "A").value = loadObject.save[0][1][j][0];
+							document.getElementById("input" + (j + 1) + "B").value = loadObject.save[0][1][j][1];
+						};
+						
+						//set images 
+						images = [];
+						for(let j = 0; j < loadObject.save[0][2].length; j++){
+							let img1 = new Image();
+						
+							if(loadObject.save[0][2][j][0]){
+								img1.src = loadObject.save[0][2][j][0];
+								img1.width = loadObject.save[0][2][j][1];
+								img1.height = loadObject.save[0][2][j][2];
+								
+								//set img name 
+								document.getElementById("input" + (j+1) + "I").innerHTML = "<img id=\"img" + (j+1) + "A\" src=\"" + img1.src + "\"; style=\"max-width:100px; max-height:100px;\" />";
+							} else {
+								img1.src = "";
+							};
+							
+							let img2 = new Image();
+							if(loadObject.save[0][2][j][3]){
+								img2.src = loadObject.save[0][2][j][3];
+								img2.width = loadObject.save[0][2][j][4];
+								img2.height = loadObject.save[0][2][j][5];
+								
+								//set fileselected? innerhmtl 
+								document.getElementById("input" + (j+1) + "J").innerHTML = "<img id=\"img" + (j+1) + "B\" src=\"" + img2.src + "\"; style=\"max-width:100px; max-height:100px;\" />";
+							} else {
+								img2.src = "";
+							};
+							
+							images.push([img1,img2]);
+						};	
+					};
+					
+					//read text from file reader
+					fr.readAsText(this.files[0]); 
+				} else {
+					//file is not valid 
+					alert("Please select a .newcardset file!");
+				};
+			};					
+		});
 		
 		//set padding 
 		function setPadding(){
